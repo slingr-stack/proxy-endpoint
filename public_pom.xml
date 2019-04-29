@@ -68,7 +68,7 @@
             <url>http://repo1.maven.org/maven2/</url>
             <layout>default</layout>
         </repository>
-        <repository>
+        <repository>d
             <id>slingrRepo.release</id>
             <url>http://repo.slingrs.io/release</url>
             <releases>
