@@ -1,0 +1,66 @@
+{
+    "label": "Proxy Endpoint",
+    "name": "proxy",
+    "apiVersion": "v1",
+    "internal": false,
+    "proxy": true,
+    "configurationType": "GLOBAL",
+    "deployment": {
+        "profiles":[
+            {
+                "name": "default",
+                "label": "Default",
+                "memory": 256,
+                "description": "Default configuration"
+            }
+        ],
+        "allowMultipleInstances": false
+    },
+    "icon48": "https://storage.googleapis.com/static.slingrs.io/platform/endpoints/proxy.png",
+    "configurationHelpUrl": "/endpoints_proxy.html#configuration",
+    "status": "ACTIVE",
+    "stores": [
+        {"name": "ds"}
+    ],
+    "events": [],
+    "functions": [],
+    "scripts":[],
+    "configuration":[
+        {
+            "name": "endpointUri",
+            "label": "Endpoint URI",
+            "type": "text",
+            "description": "URI of the web services interface (_webservices_port) on the endpoint in development. The address must be accessible from internet.",
+            "required": true,
+            "typeOptions": {
+                "validation": {
+                    "function": "utils.isPlaceholder(config.endpointUri) || (/^(http[s]?:\\/\\/){0,1}(www\\.){0,1}((localhost:)|[a-zA-Z0-9\\.\\-]+\\.[a-zA-Z]{2,5}[\\.]{0,1}|[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+)/).test(config.endpointUri)",
+                    "message": "The endpoint must be a valid HTTP URL or a valid placeholder. "
+                }
+            }
+        },
+        {
+            "name": "endpointToken",
+            "label": "Endpoint Token",
+            "type": "text",
+            "description": "Token to be used to perform exchanges between the application and the endpoint in development. Check the configuration to know how to use it.",
+            "defaultGenerator": "utils.generateUUID()"
+        },
+        {
+            "name": "webhook",
+            "label": "Proxy URL",
+            "type": "label",
+            "description": "URI to use on external services in order to receive the webhooks from them. Received information will be redirect to the endpoint behind the proxy (see Web Services URI).",
+            "value": "@config.WEBHOOK_URL"
+        },
+        {
+            "name": "configuration",
+            "label": "Configuration",
+            "type": "info",
+            "typeOptions": {
+                "alertType": "info"
+            },
+            "defaultGenerator": "'<br>_endpoint_name='+config.ENDPOINT_NAME+'<br>_app_name='+config.APP+'<br>_environment='+config.ENV+'<br>_pod_id=id<br>_profile=default<br>_custom_domain=<br>_debug=true<br>_local_deployment=true<br>_base_domain='+config.SERVER_NAME+'<br>_webservices_port=10000<br>_endpoints_services_api='+config.WEBHOOK_URL+'/api<br>_token='+config.endpointToken+'<br>_endpoint_config={}<br>&nbsp;'"
+        }
+    ]
+}
