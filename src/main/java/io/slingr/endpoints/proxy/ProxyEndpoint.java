@@ -202,7 +202,7 @@ public class ProxyEndpoint extends Endpoint {
                 .path(path);
 
         request.getHeaders().forEachMap((key, value) -> {
-            if(!Parameter.CONTENT_LENGTH.equals(key) && !Parameter.HOST.equalsIgnoreCase(key)) {
+            if(!Parameter.CONTENT_LENGTH.equalsIgnoreCase(key) && !Parameter.HOST.equalsIgnoreCase(key)) {
                 client.header(key, value);
             }
         });
