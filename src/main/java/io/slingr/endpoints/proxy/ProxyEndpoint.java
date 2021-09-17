@@ -221,7 +221,13 @@ public class ProxyEndpoint extends Endpoint {
                 endpointResponse = client.get(true);
                 break;
             case POST:
+                if(body != null){
+                    appLogs.info("body");
+                    appLogs.info(body.toString());
+                }
                 endpointResponse = client.post(body, true);
+                appLogs.info("endpointResponse");
+                appLogs.info(endpointResponse.object("body").toString());
                 break;
             case PUT:
                 endpointResponse = client.put(body, true);
@@ -252,6 +258,7 @@ public class ProxyEndpoint extends Endpoint {
         } else {
             response = new WebServiceResponse(endpointResponse.object("body"));
 
+            appLogs.info("endpointResponse.object(body).toString()");
             appLogs.info(endpointResponse.object("body").toString());
             appLogs.info(response.toString());
             if(endpointResponse.contains("status")){
@@ -265,9 +272,7 @@ public class ProxyEndpoint extends Endpoint {
                 try {
                     final Json hd = endpointResponse.json("headers");
                     if(hd != null && hd.isNotEmpty()){
-                        appLogs.info(hd.toPrettyString());
                         for (String header : hd.keys()) {
-                            appLogs.info(header);
                             if(!Parameter.CONTENT_LENGTH.equals(header) && !Parameter.HOST.equalsIgnoreCase(header)) {
                                 response.setHeader(header, hd.string(header));
                             }
@@ -279,6 +284,8 @@ public class ProxyEndpoint extends Endpoint {
             }
         }
         appLogs.info(response.toString());
+        appLogs.info("response.getBody().toString()");
+        appLogs.info(response.getBody().toString());
         return response;
     }
 
