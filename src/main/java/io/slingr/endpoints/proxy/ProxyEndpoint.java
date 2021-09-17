@@ -22,6 +22,7 @@ import io.slingr.endpoints.ws.exchange.UploadedFile;
 import io.slingr.endpoints.ws.exchange.WebServiceRequest;
 import io.slingr.endpoints.ws.exchange.WebServiceResponse;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -202,7 +204,6 @@ public class ProxyEndpoint extends Endpoint {
         final String bodyLog = request.getMethod() == RestMethod.POST || request.getMethod() == RestMethod.PUT || request.getMethod() == RestMethod.PATCH ?
                 String.format(" - body [%s]", body != null ? body : "-") : "";
         logger.info(String.format("Generic web service request [%s %s%s]%s", request.getMethod().toString(), path, StringUtils.isNotBlank(queryString) ? String.format("?%s", queryString) : "", bodyLog));
-        appLogs.info(String.format("Generic web service request [%s %s%s]%s", request.getMethod().toString(), path, StringUtils.isNotBlank(queryString) ? String.format("?%s", queryString) : "", bodyLog));
 
         final RestClientBuilder client = RestClient
                 .builder(this.endpointUri)
@@ -221,15 +222,7 @@ public class ProxyEndpoint extends Endpoint {
                 endpointResponse = client.get(true);
                 break;
             case POST:
-                if(body != null){
-                    appLogs.info("body");
-                    appLogs.info(body.toString());
-                }
                 endpointResponse = client.post(body, true);
-                appLogs.info("headers");
-                appLogs.info(client.getDefaultHeaders().toString());
-                appLogs.info("endpointResponse");
-                appLogs.info(endpointResponse.object("body").toString());
                 break;
             case PUT:
                 endpointResponse = client.put(body, true);
@@ -258,11 +251,20 @@ public class ProxyEndpoint extends Endpoint {
             response = new WebServiceResponse(String.format("Invalid response to [%s] method: %s", request.getMethod(), endpointResponse));
             response.setHttpCode(500);
         } else {
-            response = new WebServiceResponse(endpointResponse.object("body"));
+            if(endpointResponse.object("body") instanceof LinkedHashMap
+                    && endpointResponse.contains("headers")
+                    && endpointResponse.json("headers")!= null
+                    && endpointResponse.json("headers").isNotEmpty()
+                    && endpointResponse.json("headers").string("Content-Type") != null
+                    && endpointResponse.json("headers").string("Content-Type").equals(ContentType.APPLICATION_JSON.getMimeType())
+            ){
+                appLogs.info("body response fixed to Json");
+                Json jsonBody = Json.fromMap((LinkedHashMap<String, ?>) endpointResponse.object("body"));
+                response = new WebServiceResponse(jsonBody);
+            }else{
+                response = new WebServiceResponse(endpointResponse.object("body"));
+            }
 
-            appLogs.info("endpointResponse.object(body).toString()");
-            appLogs.info(endpointResponse.object("body").toString());
-            appLogs.info(response.toString());
             if(endpointResponse.contains("status")){
                 try {
                     response.setHttpCode(endpointResponse.integer("status"));
@@ -285,12 +287,7 @@ public class ProxyEndpoint extends Endpoint {
                 }
             }
         }
-        appLogs.info(response.toString());
-        appLogs.info("response.getBody().toString()");
-        appLogs.info(response.getBody().toString());
-        appLogs.info(response.getBody().getClass().toString());
-        appLogs.info(response.getBody().getClass().getName());
-        appLogs.info(response.getBody().getClass().getCanonicalName());
+
         return response;
     }
 
