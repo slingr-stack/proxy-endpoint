@@ -43,8 +43,6 @@ import java.util.Map;
 @SlingrEndpoint(name = "proxy")
 public class ProxyEndpoint extends Endpoint {
     private static final Logger logger = LoggerFactory.getLogger(ProxyEndpoint.class);
-    @ApplicationLogger
-    private AppLogs appLogs;
 
     private static final String DATA_STORE_NAME = "__ds_name__";
     private static final String DATA_STORE_NEW_ID = "__ds_id__";
@@ -103,23 +101,19 @@ public class ProxyEndpoint extends Endpoint {
     public Object functionInterceptor(FunctionRequest request) throws EndpointException {
         final String functionName = request.getFunctionName();
         logger.info(String.format("Function request [%s] - id [%s]", functionName, request.getFunctionId()));
-        appLogs.info(String.format("Function request [%s] - id [%s]", functionName, request.getFunctionId()));
 
         final Json jsonRequest = request.toJson().set(Parameter.FUNCTION_NAME, functionName);
 
         try {
             Object body = request.getParams();
-            appLogs.info(body.toString());
             if(!(body instanceof Json || body instanceof Map || body instanceof List)){
                 body = Json.map().set(Parameter.REQUEST_WRAPPED, body);
             }
-            appLogs.info(body.toString());
             jsonRequest.set(Parameter.PARAMS, body);
 
             final Json response = postJsonFromEndpoint(ApiUri.URL_FUNCTION, jsonRequest);
 
             logger.info(String.format("Function response [%s] received - id [%s]", functionName, request.getFunctionId()));
-            appLogs.info(String.format("Function response [%s] received - id [%s]", functionName, request.getFunctionId()));
             return response.contains(Parameter.DATA) ? response.json(Parameter.DATA) : Json.map();
         } catch (EndpointException ex){
             appLogger.error(String.format("Exception when try to execute function on endpoint: %s", ex.toString()));
@@ -258,7 +252,7 @@ public class ProxyEndpoint extends Endpoint {
                     && endpointResponse.json("headers").string("Content-Type") != null
                     && endpointResponse.json("headers").string("Content-Type").startsWith(ContentType.APPLICATION_JSON.getMimeType())
             ){
-                appLogs.info("body response fixed to Json");
+                logger.info(String.format("Body response to [%s] method fixed to Json"), request.getMethod());
                 Json jsonBody = Json.fromMap((LinkedHashMap<String, ?>) endpointResponse.object("body"));
                 response = new WebServiceResponse(jsonBody);
             }else{
