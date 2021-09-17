@@ -251,6 +251,7 @@ public class ProxyEndpoint extends Endpoint {
             response.setHttpCode(500);
         } else {
             response = new WebServiceResponse(endpointResponse.object("body"));
+
             appLogs.info(endpointResponse.object("body").toString());
             appLogs.info(response.toString());
             if(endpointResponse.contains("status")){
