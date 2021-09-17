@@ -252,7 +252,7 @@ public class ProxyEndpoint extends Endpoint {
                     && endpointResponse.json("headers").string("Content-Type") != null
                     && endpointResponse.json("headers").string("Content-Type").startsWith(ContentType.APPLICATION_JSON.getMimeType())
             ){
-                logger.info(String.format("Body response to [%s] method fixed to Json"), request.getMethod());
+                logger.info(String.format("Body response to [%s] method fixed to Json", request.getMethod()));
                 Json jsonBody = Json.fromMap((LinkedHashMap<String, ?>) endpointResponse.object("body"));
                 response = new WebServiceResponse(jsonBody);
             }else{
