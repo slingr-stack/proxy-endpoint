@@ -41,6 +41,8 @@ import java.util.Map;
 @SlingrEndpoint(name = "proxy")
 public class ProxyEndpoint extends Endpoint {
     private static final Logger logger = LoggerFactory.getLogger(ProxyEndpoint.class);
+    @ApplicationLogger
+    private AppLogs appLogs;
 
     private static final String DATA_STORE_NAME = "__ds_name__";
     private static final String DATA_STORE_NEW_ID = "__ds_id__";
@@ -99,19 +101,23 @@ public class ProxyEndpoint extends Endpoint {
     public Object functionInterceptor(FunctionRequest request) throws EndpointException {
         final String functionName = request.getFunctionName();
         logger.info(String.format("Function request [%s] - id [%s]", functionName, request.getFunctionId()));
+        appLogs.info(String.format("Function request [%s] - id [%s]", functionName, request.getFunctionId()));
 
         final Json jsonRequest = request.toJson().set(Parameter.FUNCTION_NAME, functionName);
 
         try {
             Object body = request.getParams();
+            appLogs.info(body.toString());
             if(!(body instanceof Json || body instanceof Map || body instanceof List)){
                 body = Json.map().set(Parameter.REQUEST_WRAPPED, body);
             }
+            appLogs.info(body.toString());
             jsonRequest.set(Parameter.PARAMS, body);
 
             final Json response = postJsonFromEndpoint(ApiUri.URL_FUNCTION, jsonRequest);
 
             logger.info(String.format("Function response [%s] received - id [%s]", functionName, request.getFunctionId()));
+            appLogs.info(String.format("Function response [%s] received - id [%s]", functionName, request.getFunctionId()));
             return response.contains(Parameter.DATA) ? response.json(Parameter.DATA) : Json.map();
         } catch (EndpointException ex){
             appLogger.error(String.format("Exception when try to execute function on endpoint: %s", ex.toString()));
@@ -196,6 +202,7 @@ public class ProxyEndpoint extends Endpoint {
         final String bodyLog = request.getMethod() == RestMethod.POST || request.getMethod() == RestMethod.PUT || request.getMethod() == RestMethod.PATCH ?
                 String.format(" - body [%s]", body != null ? body : "-") : "";
         logger.info(String.format("Generic web service request [%s %s%s]%s", request.getMethod().toString(), path, StringUtils.isNotBlank(queryString) ? String.format("?%s", queryString) : "", bodyLog));
+        appLogs.info(String.format("Generic web service request [%s %s%s]%s", request.getMethod().toString(), path, StringUtils.isNotBlank(queryString) ? String.format("?%s", queryString) : "", bodyLog));
 
         final RestClientBuilder client = RestClient
                 .builder(this.endpointUri)
@@ -244,6 +251,8 @@ public class ProxyEndpoint extends Endpoint {
             response.setHttpCode(500);
         } else {
             response = new WebServiceResponse(endpointResponse.object("body"));
+            appLogs.info(endpointResponse.object("body").toString());
+            appLogs.info(response.toString());
             if(endpointResponse.contains("status")){
                 try {
                     response.setHttpCode(endpointResponse.integer("status"));
@@ -255,7 +264,9 @@ public class ProxyEndpoint extends Endpoint {
                 try {
                     final Json hd = endpointResponse.json("headers");
                     if(hd != null && hd.isNotEmpty()){
+                        appLogs.info(hd.toPrettyString());
                         for (String header : hd.keys()) {
+                            appLogs.info(header);
                             if(!Parameter.CONTENT_LENGTH.equals(header) && !Parameter.HOST.equalsIgnoreCase(header)) {
                                 response.setHeader(header, hd.string(header));
                             }
@@ -266,6 +277,7 @@ public class ProxyEndpoint extends Endpoint {
                 }
             }
         }
+        appLogs.info(response.toString());
         return response;
     }
 
