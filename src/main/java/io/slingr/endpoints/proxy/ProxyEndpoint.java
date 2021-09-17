@@ -226,6 +226,8 @@ public class ProxyEndpoint extends Endpoint {
                     appLogs.info(body.toString());
                 }
                 endpointResponse = client.post(body, true);
+                appLogs.info("headers");
+                appLogs.info(client.getDefaultHeaders().toString());
                 appLogs.info("endpointResponse");
                 appLogs.info(endpointResponse.object("body").toString());
                 break;
@@ -286,6 +288,9 @@ public class ProxyEndpoint extends Endpoint {
         appLogs.info(response.toString());
         appLogs.info("response.getBody().toString()");
         appLogs.info(response.getBody().toString());
+        appLogs.info(response.getBody().getClass().toString());
+        appLogs.info(response.getBody().getClass().getName());
+        appLogs.info(response.getBody().getClass().getCanonicalName());
         return response;
     }
 
