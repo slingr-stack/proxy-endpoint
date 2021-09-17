@@ -251,19 +251,12 @@ public class ProxyEndpoint extends Endpoint {
             response = new WebServiceResponse(String.format("Invalid response to [%s] method: %s", request.getMethod(), endpointResponse));
             response.setHttpCode(500);
         } else {
-            appLogs.info(String.valueOf(endpointResponse.object("body") instanceof LinkedHashMap));
-            appLogs.info(String.valueOf(endpointResponse.contains("headers")));
-            appLogs.info(String.valueOf(endpointResponse.json("headers")!= null));
-            appLogs.info(String.valueOf(endpointResponse.json("headers").isNotEmpty()));
-            appLogs.info(String.valueOf(endpointResponse.json("headers").string("Content-Type")));
-            appLogs.info(String.valueOf(ContentType.APPLICATION_JSON.getMimeType()));
-            appLogs.info(String.valueOf(endpointResponse.json("headers").string("Content-Type").equals(ContentType.APPLICATION_JSON.getMimeType())));
             if(endpointResponse.object("body") instanceof LinkedHashMap
                     && endpointResponse.contains("headers")
                     && endpointResponse.json("headers")!= null
                     && endpointResponse.json("headers").isNotEmpty()
                     && endpointResponse.json("headers").string("Content-Type") != null
-                    && endpointResponse.json("headers").string("Content-Type").equals(ContentType.APPLICATION_JSON.getMimeType())
+                    && endpointResponse.json("headers").string("Content-Type").startsWith(ContentType.APPLICATION_JSON.getMimeType())
             ){
                 appLogs.info("body response fixed to Json");
                 Json jsonBody = Json.fromMap((LinkedHashMap<String, ?>) endpointResponse.object("body"));
